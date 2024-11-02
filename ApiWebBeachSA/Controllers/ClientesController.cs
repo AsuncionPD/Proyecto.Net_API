@@ -2,12 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using ApiWebBeachSA.Data;
 using ApiWebBeachSA.Models;
+using ApiWebBeachSA.Models.Costume;
+using ApiWebBeachSA.Service;
 using System.Text.RegularExpressions;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using static ApiWebBeachSA.Models.Cliente;
 
 
 namespace ApiWebBeachSA.Controllers
@@ -19,12 +16,19 @@ namespace ApiWebBeachSA.Controllers
         //Variable para utilizar la referencia der ORM Entity Framework core
         private readonly DbContextHotel _context = null;
 
-        public ClientesController(DbContextHotel pContext)
+        //Variable para utilizar los servicios de autorizacion
+        private readonly IAutorizacionServices _autorizacionServices;
+
+        public ClientesController(DbContextHotel pContext, IAutorizacionServices autorizacionServices)
         {
             _context = pContext;
+            _autorizacionServices = autorizacionServices;
         }
 
-        //metodo encargado de mostrar la informacion de todos los clientes 
+        /// <summary>
+        /// Método encargado de mostrar la información de todos los clientes 
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("Listado")]
         public List<Cliente> Listado()
         {
@@ -33,7 +37,12 @@ namespace ApiWebBeachSA.Controllers
             return lista;
         }
 
-        //metodo encargado de agregar un cliente 
+        /// <summary>
+        /// Método encargado de agregar un cliente
+        /// </summary>
+        /// <param name="temp"></param>
+        /// <param name="confirmPassword"></param>
+        /// <returns></returns>
         [HttpPost("CrearCuenta")]
         public async Task<IActionResult> CrearCuenta(Cliente temp, string confirmPassword)
         {
@@ -72,7 +81,11 @@ namespace ApiWebBeachSA.Controllers
             }
         }
 
-        //metodo encargado de eliminar a un cliente por medio de la cedula
+        /// <summary>
+        /// Método encargado de eliminar a un cliente por medio de la cédula
+        /// </summary>
+        /// <param name="cedula"></param>
+        /// <returns></returns>
         [HttpDelete("Eliminar")]
         public async Task<string> Eliminar(int cedula)
         {
@@ -89,7 +102,11 @@ namespace ApiWebBeachSA.Controllers
             return mensaje;
         }
 
-        //metodo encargado de editar la informacion de un cliente 
+        /// <summary>
+        /// Método encargado de editar la información de un cliente
+        /// </summary>
+        /// <param name="temp"></param>
+        /// <returns></returns>
         [HttpPut("Editar")]
         public async Task<string> Editar(Cliente temp)
         {
@@ -116,7 +133,11 @@ namespace ApiWebBeachSA.Controllers
             return mensaje;
         }
 
-        //Metodo encargado de consultar un cliente por medio de la cedula 
+        /// <summary>
+        /// Método encargado de consultar un cliente por medio de la cédula
+        /// </summary>
+        /// <param name="cedula"></param>
+        /// <returns></returns>
         [HttpGet("Buscar")]
         public Cliente Buscar(int cedula)
         {
@@ -126,7 +147,7 @@ namespace ApiWebBeachSA.Controllers
                 () { Nombre = "No existe" } : temp;
         }
 
-        //Validar los requisitos basicos de una contraseña 
+        //Validar los requisitos básicos de una contraseña 
         private string ValidarContraseña(string password, string userName)
         {
             if (password.Equals(userName, StringComparison.OrdinalIgnoreCase))
@@ -157,53 +178,35 @@ namespace ApiWebBeachSA.Controllers
             return null;
         }
 
+        /// <summary>
+        /// Método encargado de manejar la autenticación del cliente
+        /// </summary>
+        /// <param name="email"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
         [HttpPost("Login")]
-        public async Task<string> Login([Bind] LoginDto loginDto)
+        public async Task<IActionResult> AutenticationPW(string email, string password)
         {
-            if (loginDto == null)
+            var temp = await _context.Clientes.FirstOrDefaultAsync(u => u.Email.Equals(email) && u.Password.Equals(password));
+
+            if (temp == null)
             {
-                return "Por favor ingrese los datos";
-            }
-
-            var validation = ValidarUsuario(loginDto);
-            if (validation != null)
-            {
-                var userClaims = new List<Claim>()
-                {
-                    new Claim(ClaimTypes.Name, loginDto.Email),
-                    new Claim(ClaimTypes.Role, "User")
-                };
-
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.ASCII.GetBytes("Key_Jwt_=*ApiHotelBeachSAWebAspNet");
-
-                var tokenDescriptor = new SecurityTokenDescriptor
-                {
-                    Subject = new ClaimsIdentity(userClaims),
-                    Expires = DateTime.UtcNow.AddHours(1),
-                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-                };
-
-                var token = tokenHandler.CreateToken(tokenDescriptor);
-                var tokenString = tokenHandler.WriteToken(token);
-
-                return $"Inicio de sesión exitoso. Token: {tokenString}";
+                return Unauthorized(new AutorizacionResponse() { Token = "", Msj = "No autorizado", Resultado = false });
             }
             else
             {
-                return "El usuario o la contraseña están mal";
+                var autorizado = await _autorizacionServices.DevolverToken(temp);
+                if (autorizado == null)
+                {
+                    return Unauthorized(new AutorizacionResponse() { Token = "", Msj = "No autorizado", Resultado = false });
+                }
+                else
+                {
+                    return Ok(autorizado);
+                }
             }
         }
 
-        private Cliente ValidarUsuario(LoginDto loginDto)
-        {
-            var temp = _context.Clientes.FirstOrDefault(x => x.Email == loginDto.Email);
-            if (temp == null || !temp.Password.Equals(loginDto.Password))
-            {
-                return null;
-            }
-            return temp;
-        }
 
     }
 }

@@ -18,7 +18,10 @@ namespace ApiWebBeachSA.Controllers
         }
 
 
-        //metodo encargado de mostrar la informacion de todos los paquetes 
+        /// <summary>
+        /// Método encargado de mostrar la información de todos los paquetes 
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("Listado")]
         public List<Paquete> Listado()
         {
@@ -27,7 +30,11 @@ namespace ApiWebBeachSA.Controllers
             return lista;
         }
 
-        //metodo encargado de agregar un paquete 
+        /// <summary>
+        /// Método encargado de agregar un paquete
+        /// </summary>
+        /// <param name="temp"></param>
+        /// <returns></returns>
         [HttpPost("Agregar")]
         public async Task<string> Agregar(Paquete temp)
         {
@@ -53,7 +60,11 @@ namespace ApiWebBeachSA.Controllers
             }
         }
 
-        //Metodo para eliminar un paquete por medio del id
+        /// <summary>
+        /// Método para eliminar un paquete por medio del id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpDelete("Eliminar")]
         public async Task<string> Eliminar(int id)
         {
@@ -70,7 +81,11 @@ namespace ApiWebBeachSA.Controllers
             return mensaje;
         }
 
-        //Metodo encardado de editar la informacion de un paquete
+        /// <summary>
+        /// Método encargado de editar la información de un paquete
+        /// </summary>
+        /// <param name="temp"></param>
+        /// <returns></returns>
         [HttpPut("Editar")]
         public async Task<string> Editar(Paquete temp)
         {
@@ -95,7 +110,11 @@ namespace ApiWebBeachSA.Controllers
             return mensaje;
         }
 
-        //Metodo encargado de consultar un paquete por medio del Id
+        /// <summary>
+        /// Método encargado de consultar un paquete por medio del Id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpGet("Buscar")]
         public Paquete Buscar(int id)
         {
