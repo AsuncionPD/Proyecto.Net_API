@@ -29,7 +29,7 @@ namespace ApiWebBeachSA.Service
             if (temp != null)
             {
                 string tokenCreado = GenerarToken(cliente.Email.ToString());
-                return new AutorizacionResponse() { Token = tokenCreado, Resultado = true, Msj = "Ok" };
+                return new AutorizacionResponse() { Token = tokenCreado, Resultado = true, Msj = "Ok", TipoUsuario = temp.TipoUsuario };
             }
             else
             {
