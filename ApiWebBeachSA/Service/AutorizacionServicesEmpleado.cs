@@ -1,34 +1,33 @@
-﻿using ApiWebBeachSA.Models;
+﻿using ApiWebBeachSA.Data;
 using ApiWebBeachSA.Models.Costume;
-using ApiWebBeachSA.Data;
-using Microsoft.EntityFrameworkCore;
+using ApiWebBeachSA.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-
+using Microsoft.EntityFrameworkCore;
 
 namespace ApiWebBeachSA.Service
 {
-    public class AutorizacionServices:IAutorizacionServices
+    public class AutorizacionServicesEmpleado:IAutorizacionServicesEmpleado
     {
         private readonly IConfiguration _configuration;
         private readonly DbContextHotel _context;
 
-        public AutorizacionServices(IConfiguration configuration, DbContextHotel context)
+        public AutorizacionServicesEmpleado(IConfiguration configuration, DbContextHotel context)
         {
             _configuration = configuration;
             _context = context;
         }
 
 
-        public async Task<AutorizacionResponse> DevolverToken(Cliente cliente)
+        public async Task<AutorizacionResponse> DevolverToken(Empleado empleado)
         {
-            var temp = await _context.Clientes.FirstOrDefaultAsync(u => u.Email.Equals(cliente.Email) && u.Password.Equals(cliente.Password));
+            var temp = await _context.Empleados.FirstOrDefaultAsync(u => u.Email.Equals(empleado.Email) && u.Password.Equals(empleado.Password));
 
             if (temp != null)
             {
-                string tokenCreado = GenerarToken(cliente.Email.ToString());
+                string tokenCreado = GenerarToken(empleado.Email.ToString());
                 return new AutorizacionResponse() { Token = tokenCreado, Resultado = true, Msj = "Ok" };
             }
             else
@@ -38,15 +37,15 @@ namespace ApiWebBeachSA.Service
         }
 
 
-        private string GenerarToken(string IDCliente)
+        private string GenerarToken(string IDEmpleado)
         {
             var key = _configuration.GetValue<string>("JwtSettings:key");
             var KeyBytes = Encoding.ASCII.GetBytes(key);
 
             var claims = new ClaimsIdentity();
-            claims.AddClaim(new Claim(ClaimTypes.NameIdentifier, IDCliente));
+            claims.AddClaim(new Claim(ClaimTypes.NameIdentifier, IDEmpleado));
 
-            var credencialesToken = new SigningCredentials(new SymmetricSecurityKey(KeyBytes) 
+            var credencialesToken = new SigningCredentials(new SymmetricSecurityKey(KeyBytes)
               , SecurityAlgorithms.HmacSha256Signature);
 
             var tokenDescriptor = new SecurityTokenDescriptor()

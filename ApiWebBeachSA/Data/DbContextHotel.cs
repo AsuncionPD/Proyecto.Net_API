@@ -15,5 +15,6 @@ namespace ApiWebBeachSA.Data
         /// </summary>
         public DbSet<Cliente> Clientes { get; set; }
         public DbSet<Paquete> Paquetes { get; set; }
+        public DbSet<Empleado> Empleados { get; set; }
     }
 }

@@ -21,6 +21,7 @@ options.UseSqlServer(builder.Configuration.GetConnectionString("StringConexion")
 
 //Se agrega el servicio de JWT, con la interface y el objeto que la implementa 
 builder.Services.AddScoped<IAutorizacionServices, AutorizacionServices>();
+builder.Services.AddScoped<IAutorizacionServicesEmpleado, AutorizacionServicesEmpleado>();
 
 //se procede con la configuracion para el esquema de autenticacion
 var key = builder.Configuration.GetValue<string>("JwtSettings:Key");
