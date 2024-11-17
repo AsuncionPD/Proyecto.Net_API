@@ -70,7 +70,7 @@ namespace ApiWebBeachSA.Controllers
         {
             string mensaje = $"Paquete no eliminado, el id {id} no existe";
 
-            Paquete temp = _context.Paquetes.FirstOrDefault(x => x.Id == id);
+            Paquete temp = _context.Paquetes.FirstOrDefault(x => x.PaqueteID == id);
 
             if (temp != null)
             {
@@ -89,19 +89,19 @@ namespace ApiWebBeachSA.Controllers
         [HttpPut("Editar")]
         public async Task<string> Editar(Paquete temp)
         {
-            var aux = _context.Paquetes.FirstOrDefault(x => x.Id == temp.Id);
+            var aux = _context.Paquetes.FirstOrDefault(x => x.PaqueteID == temp.PaqueteID);
 
             string mensaje = "";
             if (aux != null)
             {
                 aux.Nombre = temp.Nombre;
-                aux.Precio = temp.Precio;
-                aux.PorcentajeReserva = temp.PorcentajeReserva;
+                aux.PrecioPorPersonaPorNoche = temp.PrecioPorPersonaPorNoche;
+                aux.PrimaPorcentaje = temp.PrimaPorcentaje;
                 aux.Mensualidades = temp.Mensualidades;
 
                 _context.Paquetes.Update(aux);
                 await _context.SaveChangesAsync();
-                mensaje = $"El Paquete {aux.Id} se actualizado correctamente";
+                mensaje = $"El Paquete {aux.PaqueteID} se actualizado correctamente";
             }
             else
             {
@@ -119,7 +119,7 @@ namespace ApiWebBeachSA.Controllers
         public Paquete Buscar(int id)
         {
             Paquete temp = null;
-            temp = _context.Paquetes.FirstOrDefault(x => x.Id == id);
+            temp = _context.Paquetes.FirstOrDefault(x => x.PaqueteID == id);
             return temp == null ? new Paquete() { Nombre = "No existe" } : temp;
         }
 

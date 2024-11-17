@@ -6,7 +6,7 @@ namespace ApiWebBeachSA.Models
     {
         [Key]
         [Required]
-        public int Id { get; set; }
+        public int PaqueteID { get; set; }
 
 
         [Required]
@@ -14,11 +14,11 @@ namespace ApiWebBeachSA.Models
 
 
         [Required]
-        public decimal Precio { get; set; }
+        public decimal PrecioPorPersonaPorNoche { get; set; }
 
 
         [Required]
-        public int PorcentajeReserva { get; set; }
+        public decimal PrimaPorcentaje { get; set; }
 
 
         [Required]
