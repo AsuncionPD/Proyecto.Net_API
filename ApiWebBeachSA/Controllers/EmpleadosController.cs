@@ -116,7 +116,6 @@ namespace ApiWebBeachSA.Controllers
             if (aux != null)
             {
                 aux.Nombre = temp.Nombre;
-                aux.Email = temp.Email;
 
                 _context.Empleados.Update(aux);
 
