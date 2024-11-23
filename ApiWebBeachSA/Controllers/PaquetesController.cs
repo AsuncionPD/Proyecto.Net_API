@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using ApiWebBeachSA.Data;
 using ApiWebBeachSA.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ApiWebBeachSA.Controllers
 {
@@ -35,6 +36,7 @@ namespace ApiWebBeachSA.Controllers
         /// </summary>
         /// <param name="temp"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpPost("Agregar")]
         public async Task<string> Agregar(Paquete temp)
         {
@@ -65,6 +67,7 @@ namespace ApiWebBeachSA.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpDelete("Eliminar")]
         public async Task<string> Eliminar(int id)
         {
@@ -86,6 +89,7 @@ namespace ApiWebBeachSA.Controllers
         /// </summary>
         /// <param name="temp"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpPut("Editar")]
         public async Task<string> Editar(Paquete temp)
         {
