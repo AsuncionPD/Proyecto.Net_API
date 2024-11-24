@@ -203,5 +203,11 @@ namespace ApiWebBeachSA.Controllers
                 }
             }
         }
+
+        [HttpGet("Count")]
+        public int Count()
+        {
+            return _context.Empleados.Count();
+        }
     }
 }

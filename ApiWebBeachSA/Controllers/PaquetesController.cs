@@ -127,5 +127,11 @@ namespace ApiWebBeachSA.Controllers
             return temp == null ? new Paquete() { Nombre = "No existe" } : temp;
         }
 
+        [HttpGet("Count")]
+        public int Count()
+        {
+            return _context.Paquetes.Count();
+        }
+
     }
 }
