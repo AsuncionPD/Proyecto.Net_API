@@ -4,6 +4,7 @@ using ApiWebBeachSA.Service;
 using System.Text.RegularExpressions;
 using ApiWebBeachSA.Data;
 using ApiWebBeachSA.Models;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace ApiWebBeachSA.Controllers
@@ -33,6 +34,7 @@ namespace ApiWebBeachSA.Controllers
         /// </summary>
         /// <param name="temp"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpPost("Agregar")]
         public async Task<string> Agregar(Reservacion temp)
         {
@@ -64,6 +66,7 @@ namespace ApiWebBeachSA.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpDelete("Eliminar")]
         public async Task<string> Eliminar(int id)
         {
@@ -85,6 +88,7 @@ namespace ApiWebBeachSA.Controllers
         /// </summary>
         /// <param name="temp"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpPut("Editar")]
         public async Task<string> Editar(Reservacion temp)
         {
@@ -102,11 +106,8 @@ namespace ApiWebBeachSA.Controllers
                 aux.DescuentoPorcentaje = temp.DescuentoPorcentaje;
                 aux.TotalConDescuento = temp.TotalConDescuento;
                 aux.FormaPago = temp.FormaPago;
-                if (temp.FormaPago.Equals("Cheque"))
-                {
-                    aux.NumeroCheque = temp.NumeroCheque;
-                    aux.Banco = temp.Banco;
-                }
+                aux.NumeroCheque = temp.NumeroCheque;
+                aux.Banco = temp.Banco;
                 aux.Prima = temp.Prima;
                 aux.RestoEnMensualidades = temp.RestoEnMensualidades;
                 aux.TipoCambio = temp.TipoCambio;
