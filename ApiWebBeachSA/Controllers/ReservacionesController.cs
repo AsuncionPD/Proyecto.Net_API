@@ -5,6 +5,11 @@ using System.Text.RegularExpressions;
 using ApiWebBeachSA.Data;
 using ApiWebBeachSA.Models;
 using Microsoft.AspNetCore.Authorization;
+using System.Net.Mail;
+using System.Globalization;
+using PdfSharp.Drawing;
+using PdfSharp.Pdf;
+using System.IO;
 
 
 namespace ApiWebBeachSA.Controllers
@@ -48,9 +53,24 @@ namespace ApiWebBeachSA.Controllers
             {
                 try
                 {
+                    temp.ReservacionID = 0;
                     _context.Reservaciones.Add(temp);
                     await _context.SaveChangesAsync();
-                    mensaje = $"Reservacion almacenando con exito!";
+
+                    var cliente = _context.Clientes.FirstOrDefault(x => x.Cedula == temp.ClienteID);
+                    if (cliente != null && !string.IsNullOrEmpty(cliente.Email))
+                    {
+                        byte[] pdfAdjunto = GenerarPDF(temp, cliente);
+
+                        string cuerpoCorreo = GenerarCuerpoCorreo(temp, cliente);
+                        EnviarCorreo(cliente.Email, "Confirmación de Reservación", cuerpoCorreo, pdfAdjunto, "Reservacion.pdf");
+
+                        mensaje = $"Reservación almacenada con éxito y correo enviado a {cliente.Email} con archivo PDF adjunto.";
+                    }
+                    else
+                    {
+                        mensaje = "Reservación almacenada, pero no se encontró un correo válido para el cliente.";
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -153,6 +173,117 @@ namespace ApiWebBeachSA.Controllers
         public int Count()
         {
             return _context.Reservaciones.Count();
+        }
+
+        private string GenerarCuerpoCorreo(Reservacion reservacion, Cliente cliente)
+        {
+            return $@"<h3>Confirmación de Reservación</h3>";
+        }
+
+        private void EnviarCorreo(string emailDestino, string asunto, string cuerpo, byte[] pdfAdjunto, string nombreArchivo)
+        {
+            string emailOrigen = "beachhotel1995@gmail.com";
+            string smtpHost = "smtp.gmail.com";
+            string smtpPassword = "carzjknskvqnuoec";
+
+            using (MailMessage mail = new MailMessage())
+            {
+                mail.From = new MailAddress(emailOrigen);
+                mail.To.Add(emailDestino);
+                mail.Subject = asunto;
+                mail.Body = cuerpo;
+                mail.IsBodyHtml = true;
+
+                if (pdfAdjunto != null && !string.IsNullOrEmpty(nombreArchivo))
+                {
+                    Attachment attachment = new Attachment(new MemoryStream(pdfAdjunto), nombreArchivo);
+                    mail.Attachments.Add(attachment);
+                }
+
+                using (SmtpClient smtp = new SmtpClient(smtpHost, 587))
+                {
+                    smtp.Credentials = new System.Net.NetworkCredential(emailOrigen, smtpPassword);
+                    smtp.EnableSsl = true;
+                    smtp.Send(mail);
+                }
+            }
+        }
+
+        private byte[] GenerarPDF(Reservacion reservacion, Cliente cliente)
+        {
+            using (var stream = new MemoryStream())
+            {
+                PdfDocument document = new PdfDocument();
+                document.Info.Title = "Confirmación de Reservación";
+
+                PdfPage page = document.AddPage();
+                XGraphics gfx = XGraphics.FromPdfPage(page);
+
+                XFont titleFont = new XFont("Verdana", 20, XFontStyle.Bold);
+                XFont bodyFont = new XFont("Verdana", 12, XFontStyle.Regular);
+
+                //decimal tipoCambio = ObtenerTipoCambio();
+
+                //decimal totalSinDescuentoDolares = reservacion.TotalSinDescuento / tipoCambio;
+                //decimal totalConDescuentoDolares = reservacion.TotalConDescuento / tipoCambio;
+
+                gfx.DrawString("Confirmación de Reservación", titleFont, XBrushes.Black, new XPoint(50, 50));
+                gfx.DrawString($"Cliente: {cliente.Nombre}", bodyFont, XBrushes.Black, new XPoint(50, 100));
+                gfx.DrawString($"Cédula: {cliente.Cedula}", bodyFont, XBrushes.Black, new XPoint(50, 130));
+                gfx.DrawString($"Correo: {cliente.Email}", bodyFont, XBrushes.Black, new XPoint(50, 160));
+                gfx.DrawString($"Fecha de Reservación: {reservacion.FechaReservacion:dd/MM/yyyy}", bodyFont, XBrushes.Black, new XPoint(50, 220));
+                gfx.DrawString($"Número de noches: {reservacion.Noches}", bodyFont, XBrushes.Black, new XPoint(50, 250));
+                gfx.DrawString($"Número de personas: {reservacion.Personas}", bodyFont, XBrushes.Black, new XPoint(50, 280));
+                gfx.DrawString($"Descuento aplicado: {reservacion.DescuentoPorcentaje}%", bodyFont, XBrushes.Black, new XPoint(50, 340));
+                gfx.DrawString($"Forma de pago: {reservacion.FormaPago}", bodyFont, XBrushes.Black, new XPoint(50, 400));
+                gfx.DrawString($"Total sin descuento: {reservacion.TotalSinDescuento:C}", bodyFont, XBrushes.Black, new XPoint(50, 310));
+                //gfx.DrawString($"Total con descuento: {reservacion.TotalConDescuento:C} CRC / {totalConDescuentoDolares:C} USD", bodyFont, XBrushes.Black, new XPoint(50, 370));
+                gfx.DrawString($"Total con descuento: {reservacion.TotalConDescuento:C}", bodyFont, XBrushes.Black, new XPoint(50, 370));
+
+                if (reservacion.FormaPago == "Cheque")
+                {
+                    gfx.DrawString($"Número de cheque: {reservacion.NumeroCheque}", bodyFont, XBrushes.Black, new XPoint(50, 430));
+                    gfx.DrawString($"Banco: {reservacion.Banco}", bodyFont, XBrushes.Black, new XPoint(50, 460));
+                }
+
+                document.Save(stream, false);
+
+                return stream.ToArray();
+            }
+        }
+
+        private decimal ObtenerTipoCambio()
+        {
+            using (var client = new HttpClient())
+            {
+                try
+                {
+                    string url = "https://apis.gometa.org/tdc/tdc.json";
+                    var response = client.GetAsync(url).Result;
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var jsonResponse = response.Content.ReadAsStringAsync().Result;
+                        dynamic data = Newtonsoft.Json.JsonConvert.DeserializeObject(jsonResponse);
+
+                        if (data == null || data.compraUSD == null)
+                        {
+                            throw new Exception("Tipo de cambio no válido.");
+                        }
+
+                        return data.compraUSD;
+                    }
+                    else
+                    {
+                        throw new Exception("Error al obtener el tipo de cambio desde la API.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Manejar error y retornar un valor predeterminado o lanzar una excepción
+                    throw new Exception($"Error al obtener el tipo de cambio: {ex.Message}");
+                }
+            }
         }
 
 
