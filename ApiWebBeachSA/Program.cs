@@ -8,10 +8,6 @@ using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-/*var cultureInfo = new CultureInfo("es-CR");
-CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
-CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;*/
-
 // Add services to the container.
 
 builder.Services.AddControllers();

@@ -35,7 +35,7 @@ namespace ApiWebBeachSA.Controllers
         }
 
         /// <summary>
-        /// Método encargado de agregar una reservacion
+        /// Método encargado de agregar una reservacion y enviar un PDF con los datos de la reservacion al correo electrónico del usuario
         /// </summary>
         /// <param name="temp"></param>
         /// <returns></returns>
@@ -175,11 +175,25 @@ namespace ApiWebBeachSA.Controllers
             return _context.Reservaciones.Count();
         }
 
+        /// <summary>
+        /// Método para crear el cuerpo del correo electrónico
+        /// </summary>
+        /// <param name="reservacion"></param>
+        /// <param name="cliente"></param>
+        /// <returns></returns>
         private string GenerarCuerpoCorreo(Reservacion reservacion, Cliente cliente)
         {
             return $@"<h3>Confirmación de Reservación</h3>";
         }
 
+        /// <summary>
+        /// Método que configura el envío del correo electrónico
+        /// </summary>
+        /// <param name="emailDestino"></param>
+        /// <param name="asunto"></param>
+        /// <param name="cuerpo"></param>
+        /// <param name="pdfAdjunto"></param>
+        /// <param name="nombreArchivo"></param>
         private void EnviarCorreo(string emailDestino, string asunto, string cuerpo, byte[] pdfAdjunto, string nombreArchivo)
         {
             string emailOrigen = "beachhotel1995@gmail.com";
@@ -209,6 +223,12 @@ namespace ApiWebBeachSA.Controllers
             }
         }
 
+        /// <summary>
+        /// Método que crea el PDF con los datos de la reservación
+        /// </summary>
+        /// <param name="reservacion"></param>
+        /// <param name="cliente"></param>
+        /// <returns></returns>
         private byte[] GenerarPDF(Reservacion reservacion, Cliente cliente)
         {
             using (var stream = new MemoryStream())
@@ -234,16 +254,17 @@ namespace ApiWebBeachSA.Controllers
                 gfx.DrawString($"Fecha de Reservación: {reservacion.FechaReservacion:dd/MM/yyyy}", bodyFont, XBrushes.Black, new XPoint(50, 220));
                 gfx.DrawString($"Número de noches: {reservacion.Noches}", bodyFont, XBrushes.Black, new XPoint(50, 250));
                 gfx.DrawString($"Número de personas: {reservacion.Personas}", bodyFont, XBrushes.Black, new XPoint(50, 280));
-                gfx.DrawString($"Descuento aplicado: {reservacion.DescuentoPorcentaje}%", bodyFont, XBrushes.Black, new XPoint(50, 340));
-                gfx.DrawString($"Forma de pago: {reservacion.FormaPago}", bodyFont, XBrushes.Black, new XPoint(50, 400));
-                gfx.DrawString($"Total sin descuento: {reservacion.TotalSinDescuento:C}", bodyFont, XBrushes.Black, new XPoint(50, 310));
+                gfx.DrawString($"Descuento aplicado: {reservacion.DescuentoPorcentaje}%", bodyFont, XBrushes.Black, new XPoint(50, 310));
+                gfx.DrawString($"Forma de pago: {reservacion.FormaPago}", bodyFont, XBrushes.Black, new XPoint(50, 340));
+                gfx.DrawString($"Total sin descuento en colones: {"₡"+reservacion.TotalSinDescuento}", bodyFont, XBrushes.Black, new XPoint(50, 370));
+                gfx.DrawString($"Total sin descuento en dólares: {"$"+reservacion.TotalUSD}", bodyFont, XBrushes.Black, new XPoint(50, 400));
                 //gfx.DrawString($"Total con descuento: {reservacion.TotalConDescuento:C} CRC / {totalConDescuentoDolares:C} USD", bodyFont, XBrushes.Black, new XPoint(50, 370));
-                gfx.DrawString($"Total con descuento: {reservacion.TotalConDescuento:C}", bodyFont, XBrushes.Black, new XPoint(50, 370));
+                gfx.DrawString($"Total con descuento en colones: {"₡"+reservacion.TotalConDescuento}", bodyFont, XBrushes.Black, new XPoint(50, 430));
 
                 if (reservacion.FormaPago == "Cheque")
                 {
-                    gfx.DrawString($"Número de cheque: {reservacion.NumeroCheque}", bodyFont, XBrushes.Black, new XPoint(50, 430));
-                    gfx.DrawString($"Banco: {reservacion.Banco}", bodyFont, XBrushes.Black, new XPoint(50, 460));
+                    gfx.DrawString($"Número de cheque: {reservacion.NumeroCheque}", bodyFont, XBrushes.Black, new XPoint(50, 460));
+                    gfx.DrawString($"Banco: {reservacion.Banco}", bodyFont, XBrushes.Black, new XPoint(50, 490));
                 }
 
                 document.Save(stream, false);
@@ -251,42 +272,6 @@ namespace ApiWebBeachSA.Controllers
                 return stream.ToArray();
             }
         }
-
-        private decimal ObtenerTipoCambio()
-        {
-            using (var client = new HttpClient())
-            {
-                try
-                {
-                    string url = "https://apis.gometa.org/tdc/tdc.json";
-                    var response = client.GetAsync(url).Result;
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var jsonResponse = response.Content.ReadAsStringAsync().Result;
-                        dynamic data = Newtonsoft.Json.JsonConvert.DeserializeObject(jsonResponse);
-
-                        if (data == null || data.compraUSD == null)
-                        {
-                            throw new Exception("Tipo de cambio no válido.");
-                        }
-
-                        return data.compraUSD;
-                    }
-                    else
-                    {
-                        throw new Exception("Error al obtener el tipo de cambio desde la API.");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Manejar error y retornar un valor predeterminado o lanzar una excepción
-                    throw new Exception($"Error al obtener el tipo de cambio: {ex.Message}");
-                }
-            }
-        }
-
-
 
 
     }//Cierre del controlador
