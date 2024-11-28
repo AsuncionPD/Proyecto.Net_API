@@ -35,7 +35,7 @@ namespace ApiWebBeachSA.Controllers
         }
 
         /// <summary>
-        /// Método encargado de agregar una reservacion y enviar un PDF con los datos de la reservacion al correo electrónico del usuario
+        /// Método encargado de agregar una reservación y enviar un PDF con los datos de la reservacion al correo electrónico del usuario
         /// </summary>
         /// <param name="temp"></param>
         /// <returns></returns>
