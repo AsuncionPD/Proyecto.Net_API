@@ -234,32 +234,29 @@ namespace ApiWebBeachSA.Controllers
             using (var stream = new MemoryStream())
             {
                 PdfDocument document = new PdfDocument();
-                document.Info.Title = "Confirmación de Reservación";
+                document.Info.Title = "Confirmación de reservación";
 
                 PdfPage page = document.AddPage();
                 XGraphics gfx = XGraphics.FromPdfPage(page);
 
-                XFont titleFont = new XFont("Verdana", 20, XFontStyle.Bold);
-                XFont bodyFont = new XFont("Verdana", 12, XFontStyle.Regular);
+                XFont titleFont = new XFont("Arial", 20, XFontStyle.Bold);
+                XFont bodyFont = new XFont("Arial", 12, XFontStyle.Regular);
 
-                //decimal tipoCambio = ObtenerTipoCambio();
+                decimal totalConDescuentoDolares = reservacion.TotalConDescuento / reservacion.TipoCambio;
 
-                //decimal totalSinDescuentoDolares = reservacion.TotalSinDescuento / tipoCambio;
-                //decimal totalConDescuentoDolares = reservacion.TotalConDescuento / tipoCambio;
-
-                gfx.DrawString("Confirmación de Reservación", titleFont, XBrushes.Black, new XPoint(50, 50));
+                gfx.DrawString("Confirmación de reservación de Beach.SA", titleFont, XBrushes.Black, new XPoint(50, 50));
                 gfx.DrawString($"Cliente: {cliente.Nombre}", bodyFont, XBrushes.Black, new XPoint(50, 100));
                 gfx.DrawString($"Cédula: {cliente.Cedula}", bodyFont, XBrushes.Black, new XPoint(50, 130));
                 gfx.DrawString($"Correo: {cliente.Email}", bodyFont, XBrushes.Black, new XPoint(50, 160));
-                gfx.DrawString($"Fecha de Reservación: {reservacion.FechaReservacion:dd/MM/yyyy}", bodyFont, XBrushes.Black, new XPoint(50, 220));
-                gfx.DrawString($"Número de noches: {reservacion.Noches}", bodyFont, XBrushes.Black, new XPoint(50, 250));
-                gfx.DrawString($"Número de personas: {reservacion.Personas}", bodyFont, XBrushes.Black, new XPoint(50, 280));
-                gfx.DrawString($"Descuento aplicado: {reservacion.DescuentoPorcentaje}%", bodyFont, XBrushes.Black, new XPoint(50, 310));
-                gfx.DrawString($"Forma de pago: {reservacion.FormaPago}", bodyFont, XBrushes.Black, new XPoint(50, 340));
-                gfx.DrawString($"Total sin descuento en colones: {"₡"+reservacion.TotalSinDescuento}", bodyFont, XBrushes.Black, new XPoint(50, 370));
-                gfx.DrawString($"Total sin descuento en dólares: {"$"+reservacion.TotalUSD}", bodyFont, XBrushes.Black, new XPoint(50, 400));
-                //gfx.DrawString($"Total con descuento: {reservacion.TotalConDescuento:C} CRC / {totalConDescuentoDolares:C} USD", bodyFont, XBrushes.Black, new XPoint(50, 370));
-                gfx.DrawString($"Total con descuento en colones: {"₡"+reservacion.TotalConDescuento}", bodyFont, XBrushes.Black, new XPoint(50, 430));
+                gfx.DrawString($"Fecha de Reservación: {reservacion.FechaReservacion:dd/MM/yyyy}", bodyFont, XBrushes.Black, new XPoint(50, 190));
+                gfx.DrawString($"Número de noches: {reservacion.Noches}", bodyFont, XBrushes.Black, new XPoint(50, 220));
+                gfx.DrawString($"Número de personas: {reservacion.Personas}", bodyFont, XBrushes.Black, new XPoint(50, 250));
+                gfx.DrawString($"Descuento aplicado: {reservacion.DescuentoPorcentaje}%", bodyFont, XBrushes.Black, new XPoint(50, 280));
+                gfx.DrawString($"Forma de pago: {reservacion.FormaPago}", bodyFont, XBrushes.Black, new XPoint(50, 310));
+                gfx.DrawString($"Total sin descuento en colones: {"₡"+reservacion.TotalSinDescuento}", bodyFont, XBrushes.Black, new XPoint(50, 340));
+                gfx.DrawString($"Total sin descuento en dólares: {"$"+reservacion.TotalUSD}", bodyFont, XBrushes.Black, new XPoint(50, 370));
+                gfx.DrawString($"Total con descuento en colones: {"₡"+reservacion.TotalConDescuento}", bodyFont, XBrushes.Black, new XPoint(50, 400));
+                gfx.DrawString($"Total con descuento en dólares: ${totalConDescuentoDolares:F2}", bodyFont, XBrushes.Black, new XPoint(50, 430));
 
                 if (reservacion.FormaPago == "Cheque")
                 {
